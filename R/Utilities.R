@@ -126,15 +126,273 @@ OLS = function(y,x) {
 #'
 #' Function computes Sum of Squared Residuals based on OLS estimates, \eqn{\beta}
 #'
-#'@import olsqr
 #'@param y matrix of dependent variables
 #'@param zz matrix of independent variables
-#'@return SSR: Sum of Squared Residuals
+#'@return ssr: Sum of Squared Residuals
 #'@export
-ssr = function(y,zz) {
+nssr = function(y,zz) {
   delta = OLS(y,zz)
   resid = y - zz %*% delta
   ssr = t(resid) %*% resid
   return(ssr)
 }
+
+#'Recursive SSR computation of a segment
+#'
+#'Function computes the recursive residuals of period from 'start' to 'last'
+#'
+#'
+#'@param start starting index of the sample used
+#'@param last ending index of the last segment considered
+#'@param y dependent vars
+#'@param z matrix of time-variant regressors (dimension q)
+#'@param h minimal length of segment
+#'@return out The vector of recursive SSR of length (last-start+1)
+#'@export
+ssr = function(start,y,z,h,last) {
+  out = matrix(0L,nrow = last, ncol = 1)
+
+  #initialize the recursion
+  index_0 = seq(start,start+h-1,1)
+  z_0 = z[index_0,,drop=FALSE]
+  y_0 = y[index_0,,drop=FALSE]
+  inv1 = solve(t(z_0) %*% z_0)
+  delta1 = OLS(y_0,z_0) #calculate initial beta
+  res = y_0 - z_0 %*% delta1 #calculate initial residuals
+  out[start+h-1,1] = t(res) %*% res # store initial SSR
+
+  #loop to construct the recursive residuals and update SSR
+  r = start+h
+  while (r <= last) {
+    v = y[r,1] - z[r,]%*%delta1  #residual of next obs
+    v = drop(v)
+    invz = inv1 %*% matrix(t(z[r,]))
+    f = 1 + z[r,,drop=FALSE] %*% invz
+    f = drop(f)
+    delta2 = delta1 + (invz * v) / f
+    inv2 = inv1 - (invz %*% t(invz)) / f
+    inv1 = inv2
+    delta1 = delta2
+    out_t = out[r-1,1] + v*v/f
+    out[r,1] = out_t
+    r=r+1
+  }
+  return(out)
+}
+
+
+#'Bandwidth calculation based on AR(1) approximation
+#'
+#'Function computes automatic bandwidth based on AR(1) approximation of
+#'estimated vector of vhat with equal weight 1
+#'
+#'@param vhat Estimated variance
+#'@return st Bandwidth-corrected variance
+#'@references
+#'@export
+bandw = function(vhat) {
+  nt = dim(vhat)[1]
+  d = dim(vhat)[2]
+
+  a2n = 0
+  a2d = 0
+
+  for (i in seq(1,d,1)){
+    y = vhat[seq(2,nt,1),i,drop=FALSE]
+    dy = vhat[seq(1,nt-1,1),i,drop=FALSE]
+    b = OLS(y,dy)
+    sig = nssr(y,dy) #calculate SSR based on AR(1) approximation
+    sig = sig/(nt-1) #in-sample correction
+    a2n = a2n + 4 * b * b * sig * sig / (1-b)^8
+    a2d = a2d + sig * sig / (1-b)^4
+  }
+
+  a2 = a2n/a2d
+  st = 1.3221 * (a2 * nt) ^.2
+  return (st)
+}
+
+#'Evaluate quadratic kernel of x
+#'
+#'Function computes the quadratic kernel by transforming
+#'value of x according to \eqn{k(\delta) = 3\frac{sin(\delta)}{\delta} -
+#'\frac{cos(\delta)}{\delta^2}} where \eqn{\delta(x) = \frac{x6\pi}{5}} is
+#'the transformation of x.
+#'
+#'@param x Value to evaluate kernel
+#'@return ker Kernel value of x
+#'@export
+kern = function(x) {
+  #####
+  # x = value of some x
+  ###
+  # ker = quadratic kernel
+  ####
+  del=6*pi*x/5;
+  ker=3*(sin(del)/del-cos(del))/(del*del);
+  return (ker)
+}
+
+
+####### Auxiliary Variance-Covariance matrix constructors ###########
+#'Construct diagonal matrix according to break date
+#'
+#'Function constructs a diagonal matrix of dimension (m+1) by (m+1) matrix
+#'with i-th entry \eqn{\frac{T_{i} - T_{i-1}}{ T}}
+#'
+#'@param b Estimated date of changes
+#'@param m Number of breaks
+#'@param bigT The sample size T
+#'@return lambda (m+1) by (m+1) diagonal matrix
+#'with i-th entry \eqn{\frac{T_{i} - T_{i-1}}{ T}}
+#'@export
+#
+
+plambda = function(b,m,bigT) {
+
+  lambda = matrix(0L , nrow = m+1, ncol = m+1)
+  lambda[1,1] = b[1,1]/bigT
+
+  k = 2
+  while (k<= m){
+    lambda[k,k] = ( b[k,1] - b[k-1,1] ) / bigT
+    k = k+1
+  }
+  lambda[m+1,m+1] = ( bigT - b[m,1] ) / bigT
+
+  return (lambda)
+}
+
+#' Construct diagonal matrix of estimated variance
+#'
+#'Function computes a diagonal matrix of dimension m+1 by m+1
+#'with i-th entry is the estimated variance of residuals of segment i
+#'
+#'@param res big residual vector of the model
+#'@param b Estimated date of changes
+#'@param m Number of breaks
+#'@param nt The sample size
+#'@return sigmat (i+1)x(i+1) diagonal matrix with i-th entry
+#'equal to estimated variance of regime i
+#'@export
+#'
+psigmq = function (res,b,q,m,nt) {
+
+  sigmat = matrix(0L, nrow = m+1, ncol = m+1)
+  resid_t = res[seq(1,b[1,1],1),1,drop=FALSE] #check this line if has problem
+  sigmat[1,1] = t(resid_t) %*% resid_t / b[1,1]
+
+  kk = 2
+  while (kk <= m) {
+    #check this loop for problem if errors
+    bf = b[kk-1,1]
+    bl = b[kk,1]
+    resid_temp = res[seq(bf,bl,1),1]
+    sigmat[kk,kk] = t(resid_temp) %*% resid_temp / (bl - bf)
+    kk = kk+1
+  }
+
+  res_f = res[seq(b[m,1]+1,nt,1),1,drop = FALSE]
+  sigmat[m+1,m+1] = t(res_f) %*% res_f / (nt - b[m,1])
+
+  return(sigmat)
+}
+
+######## Auxiliary Computation Functions for Statistical Inference #######
+#'Calculate p-value
+#'
+#'Function computes the p-value of the test
+#'
+#'@param x
+#'@param bet
+#'@param alph
+#'@param b
+#'@param deld
+#'@param gam
+#'@return g The p-value
+#'@export
+funcg = function (x,bet,alph,b,deld,gam){
+  #g = pval
+
+  if(x <= 0){
+    xb = bet * sqrt(abs(x))
+    if (abs(xb) <= 30){
+      g = -sqrt(-x/(2*pi)) * exp(x/8) - (bet/alph)*exp(-alph*x)*pnorm(-bet*sqrt(abs(x)))+
+        ((2*bet*bet/alph)-2-x/2)*pnorm(-sqrt(abs(x))/2)
+    }
+    else{
+      aa=log(bet/alph)-alph*x-xb^2/2-log(sqrt(2*pi))-log(xb)
+      g=-sqrt(-x/(2*pi))*exp(x/8)-exp(aa)*pnorm(-sqrt(abs(x))/2)+
+        ((2*bet*bet/alph)-2-x/2)*pnorm(-sqrt(abs(x))/2)
+    }
+  }
+  else{
+    xb=deld*sqrt(x)
+
+    if (abs(xb) <= 30){
+
+      g=1+(b/sqrt(2*pi))*sqrt(x)*exp(-b*b*x/8)+
+        (b*deld/gam)*exp(gam*x)*pnorm(-deld*sqrt(x))+
+        (2-b*b*x/2-2*deld*deld/gam)*pnorm(-b*sqrt(x)/2);
+    }
+    else{
+
+      aa=log((b*deld/gam))+gam*x-xb^2/2-log(sqrt(2*pi))-log(xb);
+      g=1+(b/sqrt(2*pi))*sqrt(x)*exp(-b*b*x/8)+
+        exp(aa)+(2-b*b*x/2-2*deld*deld/gam)*pnorm(-b*sqrt(x)/2);
+    }
+  }
+  return(g)
+}
+
+#'Critical values computation
+#'
+#'Function calculates the critical values for break date
+#'
+#'@param eta
+#'@param phi1s
+#'@param phi2s
+#'@return cvec Critical values of break dates
+#'@export
+cvg = function(eta,phi1s,phi2s){
+  cvec = matrix(0L,nrow = 4, ncol = 1)
+  a=phi1s/phi2s
+  gam=((phi2s/phi1s)+1)*eta/2
+  b=sqrt(phi1s*eta/phi2s)
+  deld=sqrt(phi2s*eta/phi1s)+b/2
+  alph=a*(1+a)/2
+  bet=(1+2*a)/2
+  sig = c(0.025,0.05,0.95,0.975)
+
+  isig = 1
+  while(isig <= 4){
+    #initialize upper, lower bound and critical value
+    upb = 2000
+    lwb = -2000
+    crit = 999999
+    cct = 1
+
+    while(abs(crit) >= 0.000001) {
+      cct = cct + 1
+      if (cct > 100){
+        print('the procedure to get critical values for the break dates has reached the upper bound on the number of iterations. This may happens in the procedure cvg. The resulting confidence interval for this break date is incorect')
+        break
+      }
+      else{
+        xx = lwb + (upb-lwb)/2
+        pval=funcg(xx,bet,alph,b,deld,gam)
+        crit = pval - sig[isig]
+        if (crit <= 0) {
+          lwb = xx}
+        else {
+          upb = xx}
+      }
+    }
+    cvec[isig,1] = xx
+    isig = isig+ 1
+  }
+
+  return(cvec)
+}
+
 

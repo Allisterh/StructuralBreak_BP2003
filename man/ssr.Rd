@@ -2,18 +2,24 @@
 % Please edit documentation in R/Utilities.R
 \name{ssr}
 \alias{ssr}
-\title{SSR computation}
+\title{Recursive SSR computation of a segment}
 \usage{
-ssr(y, zz)
+ssr(start, y, z, h, last)
 }
 \arguments{
-\item{y}{matrix of dependent variables}
+\item{start}{starting index of the sample used}
 
-\item{zz}{matrix of independent variables}
+\item{y}{dependent vars}
+
+\item{z}{matrix of time-variant regressors (dimension q)}
+
+\item{h}{minimal length of segment}
+
+\item{last}{ending index of the last segment considered}
 }
 \value{
-SSR: Sum of Squared Residuals
+out The vector of recursive SSR of length (last-start+1)
 }
 \description{
-Function computes Sum of Squared Residuals based on OLS estimates, \eqn{\beta}
+Function computes the recursive residuals of period from 'start' to 'last'
 }
