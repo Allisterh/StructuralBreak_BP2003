@@ -1,8 +1,6 @@
-#' Utilities functions
-#'
+# Utilities functions
 
 ###### Matrix auxiliary functions (only available in MATLAB) ######
-
 #' Rotate a matrix
 #'
 #'Function rotate sa matrix 90 degree counterclockwise
@@ -395,4 +393,140 @@ cvg = function(eta,phi1s,phi2s){
   return(cvec)
 }
 
+#'SupF test Critical Values
+#'
+#'Function to retrieve critical values of supF test stored in
+#'/SysData/SupF/cv_{x}.csv where \code{x} corresponds to the trimming level:
+#'\item{1}{\code{eps1} = 5%}
+#'\item{2}{\code{eps1} = 10%}
+#'\item{3}{\code{eps1} = 15%}
+#'\item{4}{\code{eps1} = 20%}
+#'\item{5}{\code{eps1} = 25%}
+#'The critical values are tabulated from @references
+#'@param signif significant level
+#'@param eps1 trimming level
+#'@return cv Critical value of SupF test
+#'@export
+getcv1 = function(signif,eps1){
+  if(eps1 == .05){
+    out = read.csv('./R/SysData/supF/cv_1.csv',header = FALSE)
+    cv = out[seq((signif-1)*10+1,signif*10,1),]
+  }
+
+  if(eps1 == .10) {
+    out = read.csv('./R/SysData/supF/cv_2.csv',header = FALSE)
+    cv = out[seq((signif-1)*10+1,signif*10,1),]
+  }
+
+  if(eps1 == .15) {
+    print(signif)
+    out = read.csv('./R/SysData/supF/cv_3.csv',header = FALSE)
+    cv = out[seq((signif-1)*10+1,signif*10,1),]
+  }
+
+  if(eps1 == .20) {
+    out = read.csv('./R/SysData/supF/cv_4.csv',header = FALSE)
+    cv = out[seq((signif-1)*10+1,signif*10,1),]
+  }
+
+  if(eps1 == .25) {
+    out = read.csv('./R/SysData/supF/cv_5.csv',header = FALSE)
+    cv = out[seq((signif-1)*10+1,signif*10,1),]
+  }
+  cv = data.matrix(cv)
+  colnames(cv) = NULL
+  rownames(cv) = NULL
+  return(cv)
+}
+
+#' SupF(l+1|l) test Critical Values
+#'
+#'Function to retrieve critical values of SupF(l+1|l) test stored in
+#'/SysData/SupF_next/cv_{x}.csv where \code{x} corresponds to the trimming level:
+#'\item{1}{\code{eps1} = 5%}
+#'\item{2}{\code{eps1} = 10%}
+#'\item{3}{\code{eps1} = 15%}
+#'\item{4}{\code{eps1} = 20%}
+#'\item{5}{\code{eps1} = 25%}
+#'The critical values are tabulated from @references
+#'@param signif significant level
+#'@param eps1 trimming level
+#'@return cv Critical value of SupF(l+1|l) test
+#'@export
+getcv2 = function(signif,eps1){
+  if(eps1 == .05){
+    out = read.csv('./R/SysData/supF_next/cv_1.csv',header = FALSE)
+    cv = out[seq((signif-1)*10+1,signif*10,1),]
+  }
+
+  if(eps1 == .10) {
+    out = read.csv('./R/SysData/supF_next/cv_2.csv',header = FALSE)
+    cv = out[seq((signif-1)*10+1,signif*10,1),]
+  }
+
+  if(eps1 == .15) {
+    out = read.csv('./R/SysData/supF_next/cv_3.csv',header = FALSE)
+    cv = out[seq((signif-1)*10+1,signif*10,1),]
+  }
+
+  if(eps1 == .20) {
+    out = read.csv('./R/SysData/supF_next/cv_4.csv',header = FALSE)
+    cv = out[seq((signif-1)*10+1,signif*10,1),]
+  }
+
+  if(eps1 == .25) {
+    out = read.csv('./R/SysData/supF_next/cv_5.csv',header = FALSE)
+    cv = out[seq((signif-1)*10+1,signif*10,1),]
+  }
+  cv = data.matrix(cv)
+  colnames(cv) = NULL
+  rownames(cv) = NULL
+  return(cv)
+}
+
+#'Dmax test Critical Values
+#'
+#'Function to retrieve critical values of supF test stored in
+#'/SysData/Dmax/cv_{x}.csv where \code{x} corresponds to the trimming level:
+#'\item{1}{\code{eps1} = 5%}
+#'\item{2}{\code{eps1} = 10%}
+#'\item{3}{\code{eps1} = 15%}
+#'\item{4}{\code{eps1} = 20%}
+#'\item{5}{\code{eps1} = 25%}
+#'The critical values are tabulated from @references
+#'@param signif significant level
+#'@param eps1 trimming level
+#'@return cv Critical value of SupF test
+#'@export
+getdmax = function(signif,eps1){
+
+  if(eps1 == .05){
+    out = read.csv('./R/SysData/Dmax/cv_1.csv',header = FALSE)
+    cv = out[seq((signif-1)*10+1,signif*10,1),]
+  }
+
+  if(eps1 == .10) {
+    out = read.csv('./R/SysData/Dmax/cv_2.csv',header = FALSE)
+    cv = out[seq((signif-1)*10+1,signif*10,1),]
+  }
+
+  if(eps1 == .15) {
+    out = read.csv('./R/SysData/Dmax/cv_3.csv',header = FALSE)
+    cv = out[seq((signif-1)*10+1,signif*10,1),]
+  }
+
+  if(eps1 == .20) {
+    out = read.csv('./R/SysData/Dmax/cv_4.csv',header = FALSE)
+    cv = out[seq((signif-1)*10+1,signif*10,1),]
+  }
+
+  if(eps1 == .25) {
+    out = read.csv('./R/SysData/Dmax/cv_5.csv',header = FALSE)
+    cv = out[seq((signif-1)*10+1,signif*10,1),]
+  }
+  cv = data.matrix(cv)
+  colnames(cv) = NULL
+  rownames(cv) = NULL
+  return(cv)
+}
 

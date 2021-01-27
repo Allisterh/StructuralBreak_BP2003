@@ -2,7 +2,7 @@
 % Please edit documentation in R/Utilities.R
 \name{rot90}
 \alias{rot90}
-\title{Utilities functions}
+\title{Rotate a matrix}
 \usage{
 rot90(A)
 }
@@ -13,9 +13,6 @@ rot90(A)
 B: rotated matrix A
 }
 \description{
-Rotate a matrix
-}
-\details{
 Function rotate sa matrix 90 degree counterclockwise
 }
 \examples{

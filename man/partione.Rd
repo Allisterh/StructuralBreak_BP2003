@@ -9,6 +9,10 @@ partione(b1, b2, last, vssr, vssrev)
 \arguments{
 \item{last}{end of segment considered}
 
+\item{vssr}{minimum SSRs of associated break date}
+
+\item{vssrev}{recursive SSRs of the model}
+
 \item{b_start}{first possible break date}
 
 \item{b_end}{last possible break date}
