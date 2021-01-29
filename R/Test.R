@@ -64,8 +64,10 @@ pftest = function(y,z,i,q,bigT,datevec,prewhit,robust,x,p,hetdat,hetvar){
 #'@param p number of \code{x} regressors
 #'@param prewhit,robust,hetdat,hetvar options on residuals/errors
 #'@return A list that contains the following:
+#'\itemize{
 #'\item {maxf}{Maximum value of test}
 #'\item{newd}{Additional date in alternative hypothesis }
+#'}
 #'@export
 spflp1 = function(bigvec,dt,nseg,y,z,h,q,prewhit,robust,x,p,hetdat,hetvar){
   #

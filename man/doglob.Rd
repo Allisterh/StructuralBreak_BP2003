@@ -30,9 +30,9 @@ the model will use values given in \code{betaini}. If \code{0}, betaini is skipp
 \value{
 A list containing the following components:
 \itemize{
-\item{glb}{minimum global SSR}
-\item{datevec}{Vector of dates (optimal minimizers)}
-\item{bigvec}{Associated SSRs}}
+\item{glb} {Minimum global SSR}
+\item{datevec} {Vector of dates (optimal minimizers)}
+\item{bigvec} {Associated SSRs}}
 }
 \description{
 Function obtains global minimizers using the recursive algorithm to compute

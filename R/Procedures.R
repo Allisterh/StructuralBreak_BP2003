@@ -20,9 +20,9 @@
 #'@param printd option to print results of iterations for partial change model
 #'@return A list containing the following components:
 #'\itemize{
-#'\item{glb}{minimum global SSR}
-#'\item{datevec}{Vector of dates (optimal minimizers)}
-#'\item{bigvec}{Associated SSRs}}
+#'\item{glb} {Minimum global SSR}
+#'\item{datevec} {Vector of dates (optimal minimizers)}
+#'\item{bigvec} {Associated SSRs}}
 #'@export
 #'
 doglob = function (y,z,x,m,eps,eps1,maxi,fixb,betaini,printd){
@@ -32,8 +32,9 @@ if (is.null(x)) {p = 0}
 else {p = dim(x)[2]}
 
 q = dim(z)[2]
-h = round(eps1*bigT)
 bigT = dim(y)[1]
+h = round(eps1*bigT)
+
 
 if(p == 0) {
   if (printd == 1){
@@ -55,7 +56,9 @@ else{
   print(paste('print iteration option (1)=TRUE/(0)=FALSE',printd))}
   out = nldat(y,z,x,h,m,p,q,bigT,fixb,eps,maxi,betaini,printd)
 }
-
+glb = out$glb
+datevec = out$datevec
+bigvec = out$bigvec
 #printing results
 if (printd == 1) {
 for (i in 1:m){
@@ -111,9 +114,8 @@ dotest = function(y,z,x,m,eps,eps1,maxi,fixb,betaini,printd,prewhit,robust,
   else {p = dim(x)[2]}
 
   q = dim(z)[2]
-  h = round(eps1*bigT)
   bigT = dim(y)[1]
-
+  h = round(eps1*bigT)
   #procedure for F test
   print('a) supF tests against a fixed number of breaks')
 
@@ -205,12 +207,13 @@ dospflp1 = function(y,z,x,m,eps,eps1,maxi,fixb,betaini,printd,prewhit,
   datevec = out$datevec
   bigvec = out$bigvec
 
+
   if (is.null(x)) {p = 0}
   else {p = dim(x)[2]}
 
   q = dim(z)[2]
-  h = round(eps1*bigT)
   bigT = dim(y)[1]
+  h = round(eps1*bigT)
 
   supfl = matrix (0L,m-1,1)
   ndat = matrix (0L,m-1,1)
@@ -262,12 +265,13 @@ dospflp1 = function(y,z,x,m,eps,eps1,maxi,fixb,betaini,printd,prewhit,
 #
 doorder = function(y,z,x,m,eps,eps1,maxi,fixb,betaini,printd) {
 
+
   if (is.null(x)) {p = 0}
   else {p = dim(x)[2]}
 
   q = dim(z)[2]
-  h = round(eps1*bigT)
   bigT = dim(y)[1]
+  h = round(eps1*bigT)
 
   if (p == 0){zz = z}
   else{zz = cbind(z,x)}
@@ -296,7 +300,7 @@ doorder = function(y,z,x,m,eps,eps1,maxi,fixb,betaini,printd) {
 
   mBIC = which.min(bic) - 1
   mLWZ = which.min(lwz) - 1
-  out = list('mBIC' = mBIC, 'mLWZ' = mLWZ)
+  out = list('BIC' = mBIC, 'LWZ' = mLWZ)
   return(out)
 }
 
@@ -445,8 +449,8 @@ dosequa = function(y,z,x,m,eps,eps1,maxi,fixb,betaini,printd,prewhit,
   else {p = dim(x)[2]}
 
   q = dim(z)[2]
-  h = round(eps1*bigT)
   bigT = dim(y)[1]
+  h = round(eps1*bigT)
 
   for (j in 1:4){
     print(paste('Output from the sequential procedure at significance level',
@@ -467,6 +471,44 @@ dosequa = function(y,z,x,m,eps,eps1,maxi,fixb,betaini,printd,prewhit,
 
   }
   out = list('nbreak' = nbreak,'dateseq' = dateseq)
+}
+
+#preparti
+preparti = function(y,z,nbreak,dateseq,h,x,p) {
+  bigT = dim(z)[1]
+  q = dim(z)[2]
+
+  #care if nbreak is matrix or scalar
+  dv = matrix(0L, nrow = nbreak+2, ncol = 1)
+  dv[1,1] = 0
+  dv[seq(2,nbreak+1,1),1] = dateseq
+
+  dv[nbreak+2,1] = bigT
+  ds = matrix(0L,nrow = nbreak, ncol = 1)
+  dr = matrix(0L,nrow = nbreak, ncol = 1)
+
+  for (is in 1:nbreak){
+    length = dv[is+2,1] - dv[is,1]
+    if (p == 0){
+      index = seq(dv[is,1]+1,dv[is+2,1],1)
+      y_temp = y[index,1,drop=FALSE]
+      z_temp = z[index,,drop=FALSE]
+      vssr = ssr(1,y_temp,z_temp,h,length)
+      y_temp_rev = rot90(rot90(y_temp))
+      z_temp_rev = rot90(rot90(z_temp))
+      vssrev = ssr(1,y_temp_rev,z_temp_rev,h,length)
+      out = partione(h,length-h,length,vssr,vssrev)
+      ds[is,1] = out$dx
+      dr[is,1] = ds[is,1] + dv[is,1]
+    }
+    else{
+      out = onebp(y,z,x,h,dv[is,1]+1,dv[is+2,1])
+      ds[is,1] = out$bd
+      dr[is,1] = ds[is,1]
+    }
+
+  }
+  return(dr)
 }
 
 #'Repartition procedure
@@ -505,8 +547,8 @@ dorepart = function(y,z,x,m,eps,eps1,maxi,fixb,betaini,printd,prewhit,
   else {p = dim(x)[2]}
 
   q = dim(z)[2]
-  h = round(eps1*bigT)
   bigT = dim(y)[1]
+  h = round(eps1*bigT)
 
   out = dosequa(y,z,x,m,eps,eps1,maxi,fixb,betaini,printd,prewhit,
                 robust,hetdat,hetvar)
@@ -525,6 +567,7 @@ dorepart = function(y,z,x,m,eps,eps1,maxi,fixb,betaini,printd,prewhit,
       reparv[j,seq(1:nbreak[j,1])] = repartda
     }
   }
+  #out = list('reparv' = reparv)
   return (reparv)
 }
 

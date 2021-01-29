@@ -1,6 +1,21 @@
 # Utilities functions
 
 ###### Matrix auxiliary functions (only available in MATLAB) ######
+#' Function to calculate power of a matrix
+mpower = function(A,t){
+  ####
+  # A = input matrix
+  # t = exponent
+  # ****
+  # out = A^t
+  ####
+  B = A
+  if (t == 1) {return(B)}
+  else{for (i in 2:t) {B = B %*% A}}
+  return (B)
+}
+
+
 #' Rotate a matrix
 #'
 #'Function rotate sa matrix 90 degree counterclockwise
@@ -409,28 +424,27 @@ cvg = function(eta,phi1s,phi2s){
 #'@export
 getcv1 = function(signif,eps1){
   if(eps1 == .05){
-    out = read.csv('./R/SysData/supF/cv_1.csv',header = FALSE)
+    out = supFcv1
     cv = out[seq((signif-1)*10+1,signif*10,1),]
   }
 
   if(eps1 == .10) {
-    out = read.csv('./R/SysData/supF/cv_2.csv',header = FALSE)
+    out = supFcv2
     cv = out[seq((signif-1)*10+1,signif*10,1),]
   }
 
   if(eps1 == .15) {
-    print(signif)
-    out = read.csv('./R/SysData/supF/cv_3.csv',header = FALSE)
+    out = supFcv3
     cv = out[seq((signif-1)*10+1,signif*10,1),]
   }
 
   if(eps1 == .20) {
-    out = read.csv('./R/SysData/supF/cv_4.csv',header = FALSE)
+    out = supFcv4
     cv = out[seq((signif-1)*10+1,signif*10,1),]
   }
 
   if(eps1 == .25) {
-    out = read.csv('./R/SysData/supF/cv_5.csv',header = FALSE)
+    out = supFcv5
     cv = out[seq((signif-1)*10+1,signif*10,1),]
   }
   cv = data.matrix(cv)
@@ -455,27 +469,27 @@ getcv1 = function(signif,eps1){
 #'@export
 getcv2 = function(signif,eps1){
   if(eps1 == .05){
-    out = read.csv('./R/SysData/supF_next/cv_1.csv',header = FALSE)
+    out = supF_next_cv1
     cv = out[seq((signif-1)*10+1,signif*10,1),]
   }
 
   if(eps1 == .10) {
-    out = read.csv('./R/SysData/supF_next/cv_2.csv',header = FALSE)
+    out = supF_next_cv2
     cv = out[seq((signif-1)*10+1,signif*10,1),]
   }
 
   if(eps1 == .15) {
-    out = read.csv('./R/SysData/supF_next/cv_3.csv',header = FALSE)
+    out = supF_next_cv3
     cv = out[seq((signif-1)*10+1,signif*10,1),]
   }
 
   if(eps1 == .20) {
-    out = read.csv('./R/SysData/supF_next/cv_4.csv',header = FALSE)
+    out = supF_next_cv4
     cv = out[seq((signif-1)*10+1,signif*10,1),]
   }
 
   if(eps1 == .25) {
-    out = read.csv('./R/SysData/supF_next/cv_5.csv',header = FALSE)
+    out = supF_next_cv5
     cv = out[seq((signif-1)*10+1,signif*10,1),]
   }
   cv = data.matrix(cv)
@@ -501,27 +515,27 @@ getcv2 = function(signif,eps1){
 getdmax = function(signif,eps1){
 
   if(eps1 == .05){
-    out = read.csv('./R/SysData/Dmax/cv_1.csv',header = FALSE)
+    out = Dmax_cv1
     cv = out[seq((signif-1)*10+1,signif*10,1),]
   }
 
   if(eps1 == .10) {
-    out = read.csv('./R/SysData/Dmax/cv_2.csv',header = FALSE)
+    out = Dmax_cv2
     cv = out[seq((signif-1)*10+1,signif*10,1),]
   }
 
   if(eps1 == .15) {
-    out = read.csv('./R/SysData/Dmax/cv_3.csv',header = FALSE)
+    out = Dmax_cv3
     cv = out[seq((signif-1)*10+1,signif*10,1),]
   }
 
   if(eps1 == .20) {
-    out = read.csv('./R/SysData/Dmax/cv_4.csv',header = FALSE)
+    out = Dmax_cv4
     cv = out[seq((signif-1)*10+1,signif*10,1),]
   }
 
   if(eps1 == .25) {
-    out = read.csv('./R/SysData/Dmax/cv_5.csv',header = FALSE)
+    out = Dmax_cv5
     cv = out[seq((signif-1)*10+1,signif*10,1),]
   }
   cv = data.matrix(cv)

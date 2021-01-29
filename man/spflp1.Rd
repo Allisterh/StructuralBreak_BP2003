@@ -26,8 +26,10 @@ regimes}
 }
 \value{
 A list that contains the following:
+\itemize{
 \item {maxf}{Maximum value of test}
 \item{newd}{Additional date in alternative hypothesis }
+}
 }
 \description{
 Function computes the test statistics of supF(l+1|l) test with null hypothesis
