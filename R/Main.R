@@ -221,7 +221,7 @@ model_estimation = function(y_name,z_name = NULL,x_name = NULL,data,eps1 = 0.15,
       datevec = t$datevec
       if (mbic == 0) {
         print('No break selected by BIC')
-        next}
+        }
       else{
       out$est_BIC = estim(mbic,q,z,y,datevec[,mbic,drop=FALSE],robust,prewhit,hetomega,hetq,x,p,hetdat,hetvar)
       }
