@@ -219,14 +219,23 @@ model_estimation = function(y_name,z_name = NULL,x_name = NULL,data,eps1 = 0.15,
       t_out = doorder(y,z,x,m,eps,eps1,maxi,fixb,betaini,printd)
       mbic = t_out$BIC
       datevec = t$datevec
+      if (mbic == 0) {
+        print('No break selected by BIC')
+        next}
+      else{
       out$est_BIC = estim(mbic,q,z,y,datevec[,mbic,drop=FALSE],robust,prewhit,hetomega,hetq,x,p,hetdat,hetvar)
+      }
     }
     if('LWZ' %in% method){
       t = doglob(y,z,x,m,eps,eps1,maxi,fixb,betaini,printd)
       t_out = doorder(y,z,x,m,eps,eps1,maxi,fixb,betaini,printd)
       mlwz = t_out$LWZ
       datevec = t$datevec
-      out$est_LWZ = estim(mlwz,q,z,y,datevec[,mlwz,drop=FALSE],robust,prewhit,hetomega,hetq,x,p,hetdat,hetvar)
+      if (mlwz == 0) {
+        print('No break selected by BIC')
+        }
+      else{
+      out$est_LWZ = estim(mlwz,q,z,y,datevec[,mlwz,drop=FALSE],robust,prewhit,hetomega,hetq,x,p,hetdat,hetvar)}
     }
     if('seq' %in% method){
       t_out = dosequa(y,z,x,m,eps,eps1,maxi,fixb,betaini,printd,prewhit,
@@ -315,11 +324,14 @@ model_estimation = function(y_name,z_name = NULL,x_name = NULL,data,eps1 = 0.15,
     }
 
     if('fix' %in% method){
-      t_out = doglob(y,z,x,m,eps,eps1,maxi,fixb,betaini,printd)
+      t_out = doglob(y,z,x,fixn,eps,eps1,maxi,fixb,betaini,printd)
       datevec = t_out$datevec
+      if(length(datevec) == 0){
+        print('No break is found')
+      }else{
       print(paste('Output from the estimation of the model with',fixn,'breaks'))
-      out$est_fix = estim(fixn,q,z,y,datevec[,fixn,drop=FALSE],robust,prewhit,hetomega,hetq,x,p,hetdat,hetvar)
-    }
+      out$est_fix = estim(fixn,q,z,y,datevec[,fixn,drop=FALSE],robust,prewhit,hetomega,hetq,x,p,hetdat,hetvar)}
+      }
   }
   else{print('estimation methods are skipped')}
   return(out)

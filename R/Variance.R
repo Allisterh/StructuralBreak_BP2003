@@ -201,8 +201,8 @@ pvdel = function(y,z,i,q,bigT,b,prewhit,robust,x,p,withb,hetdat,hetvar) {
         temp = correct(z[ind_temp,,drop=FALSE],res[ind_temp,1,drop=FALSE],prewhit)
         hac[ind_hac,ind_hac] = (bigT - b[i,1]) * temp
         vdel = solve(t(reg) %*% reg) %*% hac %*% solve(t(reg) %*% reg)
-
       }
+
       else {
         hac = correct(z,res,prewhit)
         lambda = plambda(b,i,bigT)
