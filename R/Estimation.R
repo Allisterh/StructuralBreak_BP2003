@@ -77,7 +77,6 @@ estim = function(m,q,z,y,b,robust,prewhit,hetomega,hetq,x,p,hetdat,hetvar){
     CI = cbind(bound[,1],bound[,2],bound[,3],bound[,4])
     colnames(CI) = c('lower 95% CI','upper 95% CI','lower 90% CI','upper 90% CI')
     rownames(CI) = c(1:m)
-    print(CI)
     out = list('SE' = SE, 'CI' = CI, 'beta' = beta, 'date' = b)
     return (out)
   }
