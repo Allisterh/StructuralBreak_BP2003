@@ -71,8 +71,9 @@ estim = function(m,q,z,y,b,robust,prewhit,hetomega,hetq,x,p,hetdat,hetvar){
     CI_90 = bound[,c(3,4)]
 
     for (i in 1:m){
-      print(paste('The 95% C.I for the',i,'th break is:',bound[i,1],' ',bound[i,2]))
-      print(paste('The 90% C.I for the',i,'th break is:',bound[i,3],' ',bound[i,4]))
+      
+      #print(paste('The 95% C.I for the',i,'th break is:',bound[i,1],' ',bound[i,2]))
+      #print(paste('The 90% C.I for the',i,'th break is:',bound[i,3],' ',bound[i,4]))
     }
     CI = cbind(bound[,1],bound[,2],bound[,3],bound[,4])
     colnames(CI) = c('lower 95% CI','upper 95% CI','lower 90% CI','upper 90% CI')

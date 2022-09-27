@@ -111,8 +111,8 @@ spflp1 = function(bigvec,dt,nseg,y,z,h,q,prewhit,robust,x,p,hetdat,hetvar){
   }
 
   if (i_n == nseg) {
-    print(paste('Given the location of the breaks from the global optimization with',
-                nseg,'breaks there was no more place to insert an additional breaks that satisfy the minimal length requirement.'))
+    #print(paste('Given the location of the breaks from the global optimization with',
+    #            nseg,'breaks there was no more place to insert an additional breaks that satisfy the minimal length requirement.'))
   }
 
   maxf = max(ftestv[1:nseg,1])
