@@ -350,6 +350,9 @@ doorder = function(y,z,x,m,eps,eps1,maxi,fixb,betaini,printd,bic_opt) {
     class(out) = 'model'
     out$numz = q
     out$numx = p
+    out$y = y
+    out$x = x
+    out$z = z
     out = compile.model(out)
     return(out)
   }
@@ -536,6 +539,9 @@ dosequa = function(y,z,x,m,eps,eps1,maxi,fixb,betaini,printd,prewhit,
     class(out) = 'model'
     out$numz = q
     out$numx = p
+    out$y = y
+    out$x = x
+    out$z = z
     out = compile.model(out)
     return(out)
   }
@@ -653,6 +659,9 @@ dorepart = function(y,z,x,m,eps,eps1,maxi,fixb,betaini,printd,prewhit,
     class(out) = 'model'
     out$numz = q
     out$numx = p
+    out$y = y
+    out$x = x
+    out$z = z
     out = compile.model(out)
     return(out)
   }
@@ -896,5 +905,59 @@ print.supfltest = function(x){
   print(x$sfl,quote=FALSE)
   invisible(x)
 }
+
+
+#' Plot model of estimated n breaks
+
+plot.model = function(x){
+  #get data from the model
+  m = x$nbreak
+  y = x$y
+  zreg = x$z
+  xreg = x$x
+  p = x$numx
+  q = x$numz
+  date = x$date
+  beta = x$beta
+  zbar = diag_par(zreg,m,date)
+  T = length(y)
+  if (p == 0){
+    reg = zbar
+  }
+  else{
+    reg = cbind(xreg,zbar)
+  }
+  
+  #compute model with no breaks
+  fixreg = cbind(xreg,zreg)
+  fixbeta = OLS(y,fixreg)
+  fity_fix = fixreg%*%fixbeta
+  
+  fity = reg%*%beta
+  tx = seq(1,T,1)
+  
+  #plot original series
+  plot(tx,y,type='l',col="black", xlab='time',ylab="y", 
+       ylim=c(min(y)*12/10,max(y)*12/10),lty=1)
+  
+  #plot fitted values series
+  
+  lines(tx, fity,type='l', col="blue",lty=2)
+  
+  
+  #plot fitted values series
+  
+  lines(tx, fity_fix,type='l', col="dark red",lty=2)
+  
+  for (i in 1:m){
+    abline(v=date[i,1],lty=2)
+  }
+  
+  legend(0,max(y)*12/10,legend=c("observed y",paste(m,'break y'),"0 break y"),
+        lty=c(1,2,2), col=c("black","blue","red"), ncol=1)
+  
+  
+}
+
 
 
