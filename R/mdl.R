@@ -129,13 +129,19 @@
 mdl <- function(y_name,z_name = NULL,x_name = NULL,data,eps1 = 0.15,m = -1,prewhit = 1,
                            robust = 1,hetdat = 1,hetvar = 1,hetomega = 1,hetq = 1,
     procedure = c('dotest'),
-    CI = 1,method = NULL,maxi = 10,fixb = 0,
+    CI = 1,maxi = 10,fixb = 0,
     eps = 0.00001,betaini = 0,fixn=-1,printd = 0){
-
   #handle data
   y_ind = match(y_name,colnames(data))
   x_ind = match(x_name,colnames(data))
   z_ind = match(z_name,colnames(data))
+  
+  cat('The options chosen are:\n')
+  cat(paste(' i) hetdat = ',hetdat),'\n',paste('ii) hetvar = ',hetvar),'\n',
+      paste('iii) hetomega = ',hetomega),'\n',paste('iv) hetq = ',hetq),'\n',
+      paste('v) robust = ',robust),'\n',paste('vi) prewhite = ',prewhit),'\n')
+  
+  mdl = list()
 
   if(is.na(y_ind)){
     print('No dependent variable found. Please try again')
@@ -182,238 +188,79 @@ mdl <- function(y_name,z_name = NULL,x_name = NULL,data,eps1 = 0.15,m = -1,prewh
   procedure = unlist(procedure,',')
 
 
-  out = list('procedure' =  procedure)
+  
 
-    #date estimation 
-    t = doglob(y,z,x,m,eps,eps1,maxi,fixb,betaini,printd)
-    
-    
-    adv_t2 = estim(m,q,z,y,t$datevec[,m,drop=FALSE],robust,prewhit,hetomega,hetq,x,p,hetdat,hetvar)
-    minSSR = t$glb
-    #datevec = t$datevec 
-    
-    
-    beta = adv_t2$beta
-    estCI = adv_t2$CI
-    date = adv_t2$date
-    SE = adv_t2$SE
-    
-    
- 
   if('dotest' %in% procedure){
-   out$test = dotest(y,z,x,m,eps,eps1,maxi,fixb,betaini,printd,prewhit,robust,
+   mdl$Wtest = dotest(y,z,x,m,eps,eps1,maxi,fixb,betaini,printd,prewhit,robust,
            hetdat,hetvar)
   }
 
   if('dospflp1' %in% procedure){
-    out$flp = dospflp1(y,z,x,m,eps,eps1,maxi,fixb,betaini,printd,prewhit,
+    mdl$spflp1 = dospflp1(y,z,x,m,eps,eps1,maxi,fixb,betaini,printd,prewhit,
              robust,hetdat,hetvar)
-
   }
+  
   if('doorder' %in% procedure){
-    out$ord = doorder(y,z,x,m,eps,eps1,maxi,fixb,betaini,printd)
+    mdl$BIC = doorder(y,z,x,m,eps,eps1,maxi,fixb,betaini,printd,1)
+    mdl$LWZ = doorder(y,z,x,m,eps,eps1,maxi,fixb,betaini,printd,0)
   }
+  
   if('dosequa' %in% procedure){
-   out$sequ = dosequa(y,z,x,m,eps,eps1,maxi,fixb,betaini,printd,prewhit,
+   mdl$sequa = dosequa(y,z,x,m,eps,eps1,maxi,fixb,betaini,printd,prewhit,
             robust,hetdat,hetvar)
-
   }
+  
   if('dorepart' %in% procedure){
-    out$repart = dorepart(y,z,x,m,eps,eps1,maxi,fixb,betaini,printd,prewhit,
+    mdl$repart = dorepart(y,z,x,m,eps,eps1,maxi,fixb,betaini,printd,prewhit,
              robust,hetdat,hetvar)
   }
-method = unlist(method,',')
-out$method = method
-
-
-#choosing number of break using information criteria & finding confidence interval
-  if(CI == 1){
-    
-    if('BIC' %in% method){
-      #t = doglob(y,z,x,m,eps,eps1,maxi,fixb,betaini,printd)
-      t_out = doorder(y,z,x,m,eps,eps1,maxi,fixb,betaini,printd)
-      mbic = t_out$BIC
-      datevec = t$datevec
-      if (mbic == 0) {
-        #print('No break selected by BIC')
-        }
-      else{
-      out$est_BIC = estim(mbic,q,z,y,datevec[,mbic,drop=FALSE],robust,prewhit,hetomega,hetq,x,p,hetdat,hetvar)
-      out$est_BIC$nbreak = mbic
-      }
-    }
-    if('LWZ' %in% method){
-      #t = doglob(y,z,x,m,eps,eps1,maxi,fixb,betaini,printd)
-      t_out = doorder(y,z,x,m,eps,eps1,maxi,fixb,betaini,printd)
-      mlwz = t_out$LWZ
-      datevec = t$datevec
-      if (mlwz == 0) {
-       # print('No break selected by LWZ')
-        }
-      else{
-      out$est_LWZ = estim(mlwz,q,z,y,datevec[,mlwz,drop=FALSE],robust,prewhit,hetomega,hetq,x,p,hetdat,hetvar)
-      out$est_LWZ$nbreak = mlwz
-      }
-    if('seq' %in% method){
-      t_out = dosequa(y,z,x,m,eps,eps1,maxi,fixb,betaini,printd,prewhit,
-                      robust,hetdat,hetvar)
-      nbreak = t_out$nbreak
-      dateseq = t_out$dateseq
-      ii = 0
-      j = 1
-      while(j<=4){
-        if (ii == 0){
-          if (nbreak[j,1] != 0){
-            #print(paste('Output from the estimation of the model selected by the sequential method at significance level',
-            #            siglev[j,1], '%'))
-            out$est_seq = estim(nbreak[j,1],q,z,y,t(dateseq[j,seq(1,nbreak[j,1]),drop=FALSE]),robust,prewhit,hetomega,hetq,x,p,hetdat,hetvar)
-            
-            }
-        }
-        j = j+1
-        nnbreak = 0
-        if(j <= 4){
-          if(nbreak[j,1] == nbreak[j-1,1]){
-            if (nbreak[j,1] == 0){
-              #print(paste('For the',siglev[j,1], '% level, the model is the same as for the',
-              #            siglev[j-1,1], '% level.'))
-              #print('The estimation is not repeated')
-              ii = 1
-              nnbreak = nnbreak+1
-            }
-            else{
-              if (identical(dateseq[j,seq(1,nbreak[j,1]),drop = FALSE],dateseq[j-1,seq(1,nbreak[j-1,1]),drop = FALSE])){
-               # print(paste('For the',siglev[j,1], '% level, the model is the same as for the',
-               #             siglev[j-1,1], '% level.'))
-               # print('The estimation is not repeated')
-                ii = 1
-              }
-            }
-          }
-        }
-        else{ii = 0}
-      }
-      out$est_seq$nbreak = nnbreak
-    }
-
-    if('rep' %in% method){
-      t_out = dosequa(y,z,x,m,eps,eps1,maxi,fixb,betaini,printd,prewhit,
-                      robust,hetdat,hetvar)
-      t_out1 = dorepart(y,z,x,m,eps,eps1,maxi,fixb,betaini,printd,prewhit,
-                        robust,hetdat,hetvar)
-      nbreak = t_out$nbreak
-      reparv = t_out1
-      ii = 0
-      nnbreak = 0
-      while (j <= 4){
-        if (ii==0){
-          if (nbreak[j,1] == 0){
-           # print(paste('The sequential procedure at the significance level',
-           #             siglev[j,1],'% found no break and'))
-           # print('the repartition procedure was skipped')
-          }
-          else{
-           # print(paste('Output from the estimation of the model selected by the repartition method from the sequential procedure at the significance level',
-           #             siglev[j,1],'%'))
-            out$est_repart = estim(nbreak[j,1],q,z,y,t(reparv[j,seq(1,nbreak[j,1]),drop=FALSE]),
-                  robust,prewhit,hetomega,hetq,x,p,hetdat,hetvar)
-            nnbreak = nnbreak+1
-          }
-        }
-        j = j+1
-        
-        out$est_repart$nbreak = nnbreak
-       
-        if (j <= 4) {
-          if (nbreak[j,1] == nbreak[j-1,1]){
-            if (nbreak[j,1] == 0){
-            #  print(paste('For the',siglev[j,1], '% level, the model is the same as for the',
-            #              siglev[j-1,1], '% level.'))
-            #  print('The estimation is not repeated')
-              ii = 1
-            }
-            else {
-              if (identical(dateseq[j,seq(1,nbreak[j,1]),drop = FALSE],dateseq[j-1,seq(1,nbreak[j-1,1]),drop = FALSE])){
-             #   print(paste('For the',siglev[j,1], '% level, the model is the same as for the',
-            #                siglev[j-1,1], '% level.'))
-            #    print('The estimation is not repeated')
-                ii = 1
-              }
-            }
-          }
-          else {
-            ii = 0
-          }
-        }
-      }
-    }
-
-    if('fix' %in% method){
-      t_out = doglob(y,z,x,fixn,eps,eps1,maxi,fixb,betaini,printd)
-      datevec = t_out$datevec
-      if(length(datevec) == 0){
-        print('No break is found')
-      }else{
-    #  print(paste('Output from the estimation of the model with',fixn,'breaks'))
-      out$est_fix = estim(fixn,q,z,y,datevec[,fixn,drop=FALSE],robust,prewhit,hetomega,hetq,x,p,hetdat,hetvar)}
-      out$est_fix$nbreak = fixn
-      }
+  
+  if('fix' %in% procedure){
+    t_out = doglob(y,z,x,fixn,eps,eps1,maxi,fixb,betaini,printd)
+    datevec = t_out$datevec
+    if(length(datevec) == 0){
+      print('No break is found')
+      return(NULL)
+    }else{
+      #  print(paste('Output from the estimation of the model with',fixn,'breaks'))
+    date = datevec[,fixn,drop=FALSE]
+    fix_mdl = estim(fixn,q,z,y,date,robust,prewhit,hetomega,hetq,x,p,hetdat,hetvar)}
+    mdl$fix = fix_mdl
+    mdl$fix$p_name = 'fix'
+    mdl$fix$nbreak = fixn
+    class(mdl$fix) = 'model'
+    mdl$fix$numz = q
+    mdl$fix$numx = p
+    mdl$fix = compile.model(mdl$fix)
   }
-  else{#print('estimation methods are skipped')}
-  }}
+
 
 
   #reorganize the results into the list
-  class(out) <- 'mdl'
+  class(mdl) <- 'mdl'
+  mdl$maxb = m
+  mdl$procedure = procedure
   
-  minSSR = t$glb
-  datevec = t$datevec 
-  
-  if (is.null(x)) {p = 0}
-  else {p = dim(x)[2]}
-  q = dim(z)[2]
-  
-  
-  out$SSR = minSSR
-  out$numx = p
-  out$numz = q
-  out$maxb = m
-  out$date = date   #estimated date
-  out$CI = estCI          #confidence interval for estimated date
-  out$beta = beta      #coefficients for regimes
-  out$SE = SE          #std error for coefficients
-  return(out)
+  return(mdl)
   }
 
 
 
-print.mdl <- function(x,...)
+print.mdl <- function(x,digits = -1,...)
 {
-  if(x$numx == 0){
-    cat('Pure structural change model with',x$maxb,'breaks')
-  }else if(x$numx > 0){
-    cat('Partial structural change model with', x$maxb,'breaks')
+  proc = x$procedure
+  cat(paste('\nProcedures invoked for maximum',x$maxb,'breaks:\n\n'))
+  for (p_name in proc){
+    cat(paste(p_name,'\n'))
   }
+  cat(paste('\nTo obtain information about specific procedure, 
+  type stored variable name + \'$\' + procedure name'))
   
-  
-  if (x$maxb == 0){print('No break due to maximum break set at 0')}
-  else {
-    cat('\nEstimated date:\n')
-    
-    for (i in 1:x$maxb){
-      cat(paste('Break ',i,':' ,x$date[i,1],' (',x$CI[i,1],',',x$CI[i,2],')**\n',sep = ''))
-    }
-    cat('\nEstimated coefficients in regimes:\n')
-    
-    for (ix in 1:x$numx){}
-    for (i in 1:(x$maxb+1)){
-      cat(paste('Regime ',i,':',format(x$beta[i,1],digits=5),
-                ' (',format(x$SE[i,1],digits=4),')\n',sep = ''))
-    }
-  }
-  
-    
-  #if (dim(x$doglob$datevec)[1] == 0){print('No break')}
   invisible(x)
 }
+
+
+
+
+
 

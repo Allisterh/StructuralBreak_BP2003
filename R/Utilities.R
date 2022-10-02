@@ -95,7 +95,7 @@ kron = function(A,B){
 #'@export
 ###
 diag_par = function(input,m,date) {
-
+  date =as.matrix(date)
   nt = dim(input)[1]
   q1 = dim(input)[2]
   #create output matrix of zeros with size: nt x (break+1)*q1
@@ -543,4 +543,6 @@ getdmax = function(signif,eps1){
   rownames(cv) = NULL
   return(cv)
 }
+
+
 

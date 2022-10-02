@@ -67,11 +67,16 @@ for (i in 1:m){
   print(datevec[1:i,i])
 }
 }
+
+
+date = out$datevec
+
+
   return (out)
 }
 
 #' SupF, UDMax & WDMax testing procedure
-#'
+#'@import 
 #' The procedure calculate the test statistics and print results of the 2 main tests:
 #' \itemize{
 #' \item{SupF test} {F test of 0 vs m breaks}
@@ -160,15 +165,21 @@ dotest = function(y,z,x,m,eps,eps1,maxi,fixb,betaini,printd,prewhit,robust,
     #computation of WDmax test
     cv = getcv1(c,eps1)
     for( i in 1:m){
-      wftest[i,1] = cv[q,1] * ftest[i,1] / cv[q,1]
+      wftest[i,1] = cv[q,1] * ftest[i,1] / cv[q,i]
     }
     if (printd==1){
     print(paste('WDmax test at the',siglev[c,1],'% level is:',max(wftest)))}
   }
   rownames(cv_supF) = siglev
   rownames(cv_Dmax) = siglev
-  out = list('ftest' = ftest, 'wftest' = wftest, 'cv_supF' = cv_supF,
-             'cv_Dmax' = cv_Dmax, 'WDmax' = max(wftest), 'Dmax' = max(ftest))
+  
+ 
+  out = list('ftest' = ftest, 'cv_supF' = cv_supF,
+             'cv_Dmax' = cv_Dmax, 'UDmax' = max(ftest))
+  out$mbreak = m
+  class(out) = 'Wtest'
+  
+  out = compile.Wtest(out)
   return(out)
 }
 
@@ -243,8 +254,14 @@ dospflp1 = function(y,z,x,m,eps,eps1,maxi,fixb,betaini,printd,prewhit,
   }
   rownames(cv_supFl) = siglev
 
-
-  result = list('supfl' = supfl, 'ndat' = ndat, 'cv' = cv_supFl)
+  
+  out = list('supfl' = supfl, 'ndat' = ndat, 'cv' = cv_supFl)
+  out$mbreak = m
+  class(out) = 'supfltest'
+  out = compile.supfltest(out)
+  print(out)
+  return(out)
+  
 }
 
 #' Order estimation procedure
@@ -264,13 +281,14 @@ dospflp1 = function(y,z,x,m,eps,eps1,maxi,fixb,betaini,printd,prewhit,
 #'the model will use values given in \code{betaini}. If \code{0}, betaini is skipped
 #'@param betaini Initial \eqn{beta_0} to use in estimation
 #'@param printd option to print results of iterations for partial change model
+#'@param bic indicator which criterion is used in selecting number of breaks
 #'@return A list that contains following:
 #'\item{mBIC}{number of breaks selected by BIC}
 #'\item{mLWZ}{number of breaks selected by LWZ}
 #'@export
 #'@references
 #
-doorder = function(y,z,x,m,eps,eps1,maxi,fixb,betaini,printd) {
+doorder = function(y,z,x,m,eps,eps1,maxi,fixb,betaini,printd,bic_opt) {
 
 
   if (is.null(x)) {p = 0}
@@ -282,8 +300,8 @@ doorder = function(y,z,x,m,eps,eps1,maxi,fixb,betaini,printd) {
 
   if (p == 0){zz = z}
   else{zz = cbind(z,x)}
-  out = doglob(y,z,x,m,eps,eps1,maxi,fixb,betaini,printd)
-  glb = out$glb
+  temp = doglob(y,z,x,m,eps,eps1,maxi,fixb,betaini,printd)
+  glb = temp$glb
   bigT = dim(y)[1]
   ssr0 = nssr(y,zz)
   delta0 = 0.1 #optimal parameters in LWZ paper
@@ -300,15 +318,42 @@ doorder = function(y,z,x,m,eps,eps1,maxi,fixb,betaini,printd) {
     lwz[i,1] = log(glob[i,1]/(bigT-i*q-i+1)) +
       ((i-1)*(q+1)*c0*(log(bigT))^(2+delta0))/bigT
 
-   # print(paste('With',i-1,'breaks:'))
-   # print(paste('BIC=',bic[i,1]))
-   # print(paste('LWZ=',lwz[i,1]))
+   
   }
 
   mBIC = which.min(bic) - 1
   mLWZ = which.min(lwz) - 1
-  out = list('BIC' = mBIC, 'LWZ' = mLWZ)
-  return(out)
+  
+  if (bic_opt == 1){
+    m=mBIC
+    p_name = 'BIC'
+  }else{
+    m=mLWZ
+    p_name = 'LWZ'
+  }
+  date = temp$datevec[seq(1,m,1),m,drop=FALSE]
+  if (m == 0){
+    print('There are no breaks in this model and estimation is skipped')
+    return(NULL)
+  }
+  else{
+    hetq=0
+    hetomega=0
+    hetdat=1
+    hetomega=1
+    hetvar=1
+    robust=1
+    prewhit=1
+    out = estim(m,q,z,y,date,robust,prewhit,hetomega,hetq,x,p,hetdat,hetvar)
+    out$p_name = p_name
+    out$nbreak = m
+    class(out) = 'model'
+    out$numz = q
+    out$numx = p
+    out = compile.model(out)
+    return(out)
+  }
+  
 }
 
 
@@ -381,7 +426,7 @@ sequa = function(m,signif,q,h,bigT,robust,prewhit,z,y,x,p,hetdat,hetvar,eps1){
           y_temp = y[seq(dv[i_s,1]+1,dv[i_s+1,1]),1,drop=FALSE]
           z_temp = z[seq(dv[i_s,1]+1,dv[i_s+1,1]),,drop=FALSE]
           x_temp = x[seq(dv[i_s,1]+1,dv[i_s+1,1]),,drop=FALSE]
-          out = onebp(y,z,x,h,dv[i_s,1]+1,dv[is+1,1])
+          out = onebp(y,z,x,h,dv[i_s,1]+1,dv[i_s+1,1])
           ds[i_s,1] = out$bd - dv[i_s,1]
           ftestv[i_s,1] = pftest(y_temp,z_temp,1,q,length,ds[i_s,1],
                                  prewhit,robust,x_temp,p,hetdat,hetvar)
@@ -401,7 +446,6 @@ sequa = function(m,signif,q,h,bigT,robust,prewhit,z,y,x,p,hetdat,hetvar,eps1){
     }
     else {
       newseg = which.max(ftestv[seq(1,nseg),1])
-      print(paste('Next break is found at:',ds[newseg,1]+dv[newseg,1]))
       dv[nseg+2,1] = ds[newseg,1] + dv[newseg,1]
       nbreak = nbreak + 1
       #check this sort
@@ -464,7 +508,7 @@ dosequa = function(y,z,x,m,eps,eps1,maxi,fixb,betaini,printd,prewhit,
    #              siglev[j,1],'%'))
     out = sequa(m,j,q,h,bigT,robust,prewhit,z,y,x,p,hetdat,hetvar,eps1)
     nbr = out$nbreak
-    datese = out$dv0
+    datese = as.matrix(out$dv0)
     #print(paste('The sequential procedure estimated the number of breaks at:',nbr))
     if (nbr > 0) {
     #  print('The break dates are:')
@@ -475,9 +519,27 @@ dosequa = function(y,z,x,m,eps,eps1,maxi,fixb,betaini,printd,prewhit,
     if (nbr!=0){
       dateseq[j,seq(1,nbreak[j,1])] = t(datese)
     }
-
   }
-  out = list('nbreak' = nbreak,'dateseq' = dateseq)
+  m = nbreak[2,1]
+  date = as.matrix(dateseq[2,seq(1,nbreak[2,1],1),drop=FALSE])
+  date = t(date)
+  if (m == 0){
+    print('There are no breaks in this model and estimation is skipped')
+    return(NULL)
+    }
+  else{
+    hetq=0
+    hetomega=0
+    out = estim(m,q,z,y,date,robust,prewhit,hetomega,hetq,x,p,hetdat,hetvar)
+    out$p_name = 'dosequa'
+    out$nbreak = m
+    class(out) = 'model'
+    out$numz = q
+    out$numx = p
+    out = compile.model(out)
+    return(out)
+  }
+  
 }
 
 #preparti
@@ -556,26 +618,283 @@ dorepart = function(y,z,x,m,eps,eps1,maxi,fixb,betaini,printd,prewhit,
   q = dim(z)[2]
   bigT = dim(y)[1]
   h = round(eps1*bigT)
-
-  out = dosequa(y,z,x,m,eps,eps1,maxi,fixb,betaini,printd,prewhit,
-                robust,hetdat,hetvar)
-  nbreak = out$nbreak
-  dateseq = out$dateseq
+  nbreak = matrix(0L,4,1)
+  
+  
   for (j in 1:4){
-    #print(paste('Output from the repartition procedure for the',
-    #            siglev[j,1],'% significance level'))
-    if (nbreak[j,1] == 0){
+    temp = sequa(m,j,q,h,bigT,robust,prewhit,z,y,x,p,hetdat,hetvar,eps1)
+    nbreak[j,1] = temp$nbreak
+    if (temp$nbreak == 0){
      # print(('The sequential procedure found no break and the repartition procedure is skipped.'))
     }
     else {
-      repartda = preparti(y,z,nbreak[j,1,drop=FALSE],
-                          t(dateseq[j,seq(1:nbreak[j,1]),drop=FALSE]),
+      repartda = preparti(y,z,temp$nbreak,
+                          temp$dv0,
                           h,x,p)
-      reparv[j,seq(1:nbreak[j,1])] = repartda
+      reparv[j,seq(1:temp$nbreak)] = repartda
     }
   }
-  #out = list('reparv' = reparv)
+  
+  #estimate the date at 5% significant level
+  m = nbreak[2,1]
+  date = as.matrix(reparv[2,seq(1,nbreak[2,1],1),drop=FALSE])
+  date = t(date)
+  
+  if (m == 0){
+    print('There are no breaks in this model and estimation is skipped')
+    return(NULL)
+  }
+  else{
+    hetq=0
+    hetomega=0
+    out = estim(m,q,z,y,date,robust,prewhit,hetomega,hetq,x,p,hetdat,hetvar)
+    out$p_name = 'dorepart'
+    out$nbreak = m
+    class(out) = 'model'
+    out$numz = q
+    out$numx = p
+    out = compile.model(out)
+    return(out)
+  }
+  
+  
   return (reparv)
+}
+
+
+#Format output of n break model
+#'@export
+compile.model = function (x,digits = -1,...){
+  if (digits==-1){digits = 3}
+  if (x$nbreak == 0){return(NULL)}
+  else {
+    
+    #format date estimation
+    CI_95 = c()
+    CI_90 = c()
+    coln = c()
+    for (i in 1:x$nbreak){
+      coln = c(coln, paste('Break',i,sep=''))
+      CI_95 = c(CI_95,paste('(',x$CI[i,1],',',x$CI[i,2],')',sep=''))
+      CI_90 = c(CI_90,paste('(',x$CI[i,3],',',x$CI[i,4],')',sep=''))
+    }
+    date_tab = data.frame(date = t(x$date),stringsAsFactors = FALSE)
+    date_tab = rbind(date_tab,CI_95)
+    date_tab = rbind(date_tab,CI_90)
+    colnames(date_tab) = coln
+    rownames(date_tab) = c('Date','95% CI','90% CI')
+    
+    
+    #format regime-specific coefficients
+    rnameRS = c()
+      for (i in 1:x$numz){
+        rnameRS = cbind(rnameRS,paste('z',i,sep=''))
+      }
+    
+    cnameRS = c()
+    coefRS = c()
+    for (i in 1:(x$nbreak+1)){
+    cnameRS = cbind(cnameRS,paste('Regime',i))
+    }
+    for (j in 1:x$numz){
+      coefRSj = c()
+    for (i in 1:(x$nbreak+1)){
+      coefRSj = cbind(coefRSj,paste(format(round(x$beta[(j-1)*(x$nbreak+1)+i,1],digits),nsmall=digits),
+                              paste('(',format(round(x$SE[(j-1)*(x$nbreak+1)+i,1],digits),nsmall=digits),')',sep='')))
+      }
+      coefRS = rbind(coefRS,coefRSj)
+    }
+    
+  }
+    rnameRS = paste(rnameRS,'(SE)',sep=' ')
+    coef_tabRS=data.frame(co = coefRS)
+    
+    
+    rownames(coef_tabRS) = rnameRS
+    colnames(coef_tabRS) = cnameRS
+    
+    
+    #format regime-wise coefficients
+    
+    if(x$numx == 0){coef_tabRW = NULL}
+    else{ 
+      rnameRW = c()
+      for (i in 1:x$numx){
+        rnameRW = cbind(rnameRW,paste('x',i,sep=''))
+      }
+    
+    cnameRW = 'All regimes'
+    coefRW = c()
+    for (j in 1:x$numx){
+      coefRW = cbind(coefRW,paste(format(round(x$beta[x$numz*(x$nbreak+1)+j,1],digits),nsmall=digits),
+                                  paste('(',format(round(x$SE[x$numz*x$nbreak+j,1],digits),nsmall=digits),')',sep='')))}
+    
+    rnameRW = paste(rnameRW,'(SE)',sep=' ')
+    coef_tabRW=data.frame(co = coefRW)
+    
+    rownames(coef_tabRW) = rnameRW
+    colnames(coef_tabRW) = cnameRW}
+    
+    table = list('date_tab' = date_tab,'RS_tab' = coef_tabRS, 'RW_tab' = coef_tabRW)
+    x$tab = table
+    return(x)
+  }
+  
+  
+
+
+
+
+#'Summary output of a n breaks model
+#'
+#'Function to format the output of the n-break model
+#'@param nbreak number of breaks in the model
+#'@param glb global minimum SSR of the model
+#'@param datevec estimated break date
+#'@param y dependent variables
+#'@param z independent variables with regime-specific coefficients
+#'@param x independent variables with regime-wise coefficients
+#'@return tbl Tables containings:
+#'i) global minimum SSR
+#'ii) estimated date
+#'iii) estimated coefficients
+
+print.model <- function(x,digits = -1,...)
+{
+  #print procedure to select number of breaks
+  proc = switch(x$p_name,'dosequa'='sequential procedure', 'BIC' = 'BIC', 'LWZ' = 'LWZ',
+                'dorepart' = 'repartition procedure', 'fix' = 'specified number of breaks')
+  cat(paste('\nThe number of breaks is estimated by',proc,'\n'))
+  
+  if (digits==-1){digits = 3}
+  if (x$nbreak == 0){print('No break found due to estimated number of break is 0')
+    break}
+  if(x$numx == 0){
+    cat(paste('Pure change model with',x$nbreak,'estimated breaks.',sep=' '))
+  }else if(x$numx > 0){
+    cat(paste('Partial change model with', x$nbreak,'estimated breaks.',sep=' '))
+  }
+  cat('\nMinimum SSR =',
+              format(round(x$SSR,3),nsmall=3),'\n')
+  
+  cat('\nEstimated date:\n')
+  print(x$tab$date_tab,quote=FALSE)
+  
+  cat('\nEstimated regime-specific coefficients:\n')
+  print(x$tab$RS_tab,quote=FALSE)
+  
+  
+  if(x$numx == 0) {cat('\nNo regime-wise regressors\n')}
+  else{
+    cat('\nEstimated regime-wise coefficients:\n\n')
+    print(x$tab$RW_tab,quote='FALSE')}
+    
+
+  invisible(x)
+}
+
+
+#'Summary output of Sup Wald test
+#'
+#'Function to format the output of the Sup F test
+#'@param nbreak number of breaks in the model
+#'@param glb global minimum SSR of the model
+#'@param datevec estimated break date
+#'@param y dependent variables
+#'@param z independent variables with regime-specific coefficients
+#'@param x independent variables with regime-wise coefficients
+#'@return tbl Tables containings:
+#'i) global minimum SSR
+#'ii) estimated date
+#'iii) estimated coefficients
+#'
+
+
+compile.Wtest <- function(x,digits = -1,...)
+{
+  cnames1 = c()
+  for (i in 1:x$mbreak){
+    if (i == 1){
+    cnames1 = cbind(cnames1, paste(i,'break'))}
+    else
+    {
+      cnames1 = cbind(cnames1,paste(i,'breaks'))
+    }
+  }
+  ftest = t(x$ftest)
+  
+  
+  supF1 = data.frame(ftest = format(round(ftest,3),nsmall=3)) 
+  cv_supF = format(round(x$cv_supF,3),nsmall = 3)
+  colnames(cv_supF) = colnames(supF1)
+  supF1 = rbind(supF1,cv_supF)
+ 
+  rownames(supF1) = c('Sup F','10% CV','5% CV','2.5% CV','1% CV')
+  colnames(supF1) = cnames1
+  
+  UDmax = data.frame(UDmax = format(round(x$UDmax,3),nsmall = 3), 
+                     cv = format(round(t(x$cv_Dmax),3),nsmall = 3))
+
+  colnames(UDmax) = c('UDMax','10% CV','5% CV','2.5% CV','1% CV')
+ 
+  
+  x$supF1 = supF1
+  x$UDmax = UDmax
+  return(x)
+}
+
+#'Summary output of Sup(l+1|l) test
+#'
+#'Function to format the output of the Sup F test
+#'@param nbreak number of breaks in the model
+#'@param glb global minimum SSR of the model
+#'@param datevec estimated break date
+#'@param y dependent variables
+#'@param z independent variables with regime-specific coefficients
+#'@param x independent variables with regime-wise coefficients
+#'@return tbl Tables containings:
+#'i) global minimum SSR
+#'ii) estimated date
+#'iii) estimated coefficients
+#'
+
+
+print.Wtest <- function(x)
+{
+  cat('\na) SupF tests against a fixed number of breaks\n\n')
+  print(x$supF1,quote=FALSE)
+  cat('\nb) UDmax tests against an unknown number of breaks\n\n')
+  print(x$UDmax,quote=FALSE)
+  invisible(x)
+}
+
+compile.supfltest = function(x){
+  nbreak = sum(!is.na(x$ndat))
+  cnames = c()
+  for (i in 1:nbreak){
+    cnames = cbind(cnames, paste('supF(',i+1,'|',i,')',sep=''))
+  }
+  x$supfl = format(round(x$supfl,3),nsmall = 3)
+  x$ndat = format(x$ndat,nsmall=0)
+  x$cv = format(round(x$cv,3),nsmall = 3)
+  
+  sfl =data.frame(supfl = t(x$supfl[seq(1,nbreak,1),1,drop=FALSE]))
+  ndat = t(x$ndat[seq(1,nbreak,1),1,drop=FALSE])
+  cv = x$cv[,seq(1,nbreak,1)]
+  colnames(ndat) = colnames(sfl)
+  colnames(cv) = colnames(sfl)
+  sfl = rbind(sfl,ndat)
+  sfl = rbind(sfl,cv)
+  colnames(sfl) = cnames
+  rownames(sfl) = c('Seq supF','Estimated date','10% CV','5% CV', '2.5% CV', '1% CV')
+  x$sfl = sfl
+  return (x)
+}
+
+print.supfltest = function(x){
+  cat('\nsupF(l+1|l) tests using global optimizers under the null\n\n')
+  print(x$sfl,quote=FALSE)
+  invisible(x)
 }
 
 

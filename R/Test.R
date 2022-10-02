@@ -22,6 +22,7 @@
 pftest = function(y,z,i,q,bigT,datevec,prewhit,robust,x,p,hetdat,hetvar){
   #construct matrix R
   rsub = matrix(0L, nrow = i , ncol = i+1)
+  datevec = as.matrix(datevec)
   j = 1
   while(j<=i){
     rsub[j,j] = -1

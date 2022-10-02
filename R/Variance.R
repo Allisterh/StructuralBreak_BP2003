@@ -254,7 +254,7 @@ interval = function(y,z,zbar,b,q,m,robust,prewhit,hetomega,hetq,x,p){
   nt = dim(z)[1]
   bound = matrix(0L, nrow = m, ncol = 4)
   bf = matrix(0L, nrow = m+2, ncol = 1)
-
+  b = as.matrix(b)
   #specify resid
   if(p==0){
     delta = OLS(y,zbar)
@@ -267,7 +267,7 @@ interval = function(y,z,zbar,b,q,m,robust,prewhit,hetomega,hetq,x,p){
   }
 
   bf[1,1] = 0
-  bf[seq(2,m+1),1] = b[seq(1,m),1,drop=FALSE]
+  bf[seq(2,m+1,1),1] = b[seq(1,m,1),1,drop=FALSE]
   bf[m+2,1] = nt
 
   for(i in 1:m){
