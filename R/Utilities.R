@@ -412,11 +412,12 @@ cvg = function(eta,phi1s,phi2s){
 #'
 #'Function to retrieve critical values of supF test stored in
 #'/SysData/SupF/cv_{x}.csv where \code{x} corresponds to the trimming level:
-#'\item{1}{\code{eps1} = 5%}
-#'\item{2}{\code{eps1} = 10%}
-#'\item{3}{\code{eps1} = 15%}
-#'\item{4}{\code{eps1} = 20%}
-#'\item{5}{\code{eps1} = 25%}
+#'\itemize{
+#'\item{1: \code{eps1} = 5%}
+#'\item{2: \code{eps1} = 10%}
+#'\item{3: \code{eps1} = 15%}
+#'\item{4: \code{eps1} = 20%}
+#'\item{5: \code{eps1} = 25%}}
 #'The critical values are tabulated from @references
 #'@param signif significant level
 #'@param eps1 trimming level
@@ -457,11 +458,12 @@ getcv1 = function(signif,eps1){
 #'
 #'Function to retrieve critical values of SupF(l+1|l) test stored in
 #'/SysData/SupF_next/cv_{x}.csv where \code{x} corresponds to the trimming level:
-#'\item{1}{\code{eps1} = 5%}
-#'\item{2}{\code{eps1} = 10%}
-#'\item{3}{\code{eps1} = 15%}
-#'\item{4}{\code{eps1} = 20%}
-#'\item{5}{\code{eps1} = 25%}
+#'\itemize{
+#'\item{1: \code{eps1} = 5%}
+#'\item{2: \code{eps1} = 10%}
+#'\item{3: \code{eps1} = 15%}
+#'\item{4: \code{eps1} = 20%}
+#'\item{5: \code{eps1} = 25%}}
 #'The critical values are tabulated from @references
 #'@param signif significant level
 #'@param eps1 trimming level
@@ -502,12 +504,14 @@ getcv2 = function(signif,eps1){
 #'
 #'Function to retrieve critical values of supF test stored in
 #'/SysData/Dmax/cv_{x}.csv where \code{x} corresponds to the trimming level:
-#'\item{1}{\code{eps1} = 5%}
-#'\item{2}{\code{eps1} = 10%}
-#'\item{3}{\code{eps1} = 15%}
-#'\item{4}{\code{eps1} = 20%}
-#'\item{5}{\code{eps1} = 25%}
+#'\itemize{
+#'\item{1: \code{eps1} = 5%}
+#'\item{2: \code{eps1} = 10%}
+#'\item{3: \code{eps1} = 15%}
+#'\item{4: \code{eps1} = 20%}
+#'\item{5: \code{eps1} = 25%}}
 #'The critical values are tabulated from @references
+#'
 #'@param signif significant level
 #'@param eps1 trimming level
 #'@return cv Critical value of SupF test
@@ -542,6 +546,41 @@ getdmax = function(signif,eps1){
   colnames(cv) = NULL
   rownames(cv) = NULL
   return(cv)
+}
+
+
+# function to process data before invoking procedures
+process_data = function(y_name,z_name = NULL,x_name = NULL,data){
+  #handle data
+  y_ind = match(y_name,colnames(data))
+  x_ind = match(x_name,colnames(data))
+  z_ind = match(z_name,colnames(data))
+  
+  if(is.na(y_ind)){
+    return(NULL)}
+  else{
+  y = data[,y_ind]
+  y = data.matrix(y)
+  
+  if (is.null(x_name)) {x = c()}
+  else{
+    if(anyNA(x_ind)){print('No x regressors found. Please try again')}
+    else{x = data.matrix(data[,x_ind,drop=FALSE])}}
+  if (is.null(z_name)) {z = matrix(1L,T,1)}
+  else{
+    if(anyNA(z_ind)){print('No z regressors found. Please try again')}
+    else{z = data.matrix(data[,z_ind,drop=FALSE])}}
+  out = list();
+  #store y,x,z name and corresponding x,y and z data 
+  out$y_name = y_name
+  out$z_name = z_name
+  out$x_name = x_name
+  out$y = y
+  out$z = z
+  out$x = x
+  }
+  
+  return(out)
 }
 
 

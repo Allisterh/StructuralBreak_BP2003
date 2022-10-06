@@ -35,7 +35,6 @@ estim = function(m,q,z,y,b,robust,prewhit,hetomega,hetq,x,p,hetdat,hetvar){
     bigT = dim(z)[1]
     d = (m+1)*q + p
     vdel = matrix(0L,nrow = d, ncol = d)
-
     #construct zbar matrix. Diagonal partition of Z
     #at the estimated break date
     zbar = diag_par(z,m,b)
@@ -51,10 +50,10 @@ estim = function(m,q,z,y,b,robust,prewhit,hetomega,hetq,x,p,hetdat,hetvar){
     #estimation of β and δ in pure/partial model
     beta = OLS(y,reg)
     vdel = pvdel(y,z,m,q,bigT,b,prewhit,robust,x,p,1,hetdat,hetvar)
-    colnames(beta) = 'Coefficients'
+    colnames(beta) = 'coefficients'
 
     SE = matrix(0L,d,1)
-    colnames(SE) = 'Corrected SE'
+    colnames(SE) = 'corrected SE'
     for (i in 1:d){
       #print(paste('Corrected SE for coefficient',i,'is',sqrt(vdel[i,i])))
       SE[i,1] = sqrt(vdel[i,i])
@@ -78,10 +77,14 @@ estim = function(m,q,z,y,b,robust,prewhit,hetomega,hetq,x,p,hetdat,hetvar){
     CI = cbind(bound[,1],bound[,2],bound[,3],bound[,4])
     colnames(CI) = c('lower 95% CI','upper 95% CI','lower 90% CI','upper 90% CI')
     rownames(CI) = c(1:m)
+    fitted = as.matrix(reg%*%beta)
+    resid = as.matrix(y - fitted)
     
-    resid = as.matrix(y - reg%*%beta)
+    colnames(resid) = 'residuals'
+    colnames(fitted) = 'fitted.values'
     SSR = t(resid)%*%resid
-    out = list('SE' = SE, 'CI' = CI, 'beta' = beta, 'date' = b, 'SSR' = SSR)
+    out = list('SE' = SE, 'CI' = CI, 'beta' = beta, 'date' = b, 
+               'SSR' = SSR, 'resid' = resid,'fitted.values' = fitted)
     return (out)
   }
 
