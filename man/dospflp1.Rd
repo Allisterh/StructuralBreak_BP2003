@@ -5,30 +5,24 @@
 \title{SupF(l+1|l) test}
 \usage{
 dospflp1(
-  y,
-  z,
-  x,
-  m,
-  eps,
-  eps1,
-  maxi,
-  fixb,
-  betaini,
-  printd,
-  prewhit,
-  robust,
-  hetdat,
-  hetvar
+  y_name,
+  z_name = NULL,
+  x_name = NULL,
+  data,
+  m = 5,
+  eps = 1e-05,
+  eps1 = 0.15,
+  maxi = 10,
+  fixb = 0,
+  betaini = 0,
+  printd = 0,
+  prewhit = 1,
+  robust = 1,
+  hetdat = 1,
+  hetvar = 1
 )
 }
 \arguments{
-\item{y}{dependent variables in matrix form}
-
-\item{z}{matrix of independent variables with coefficients are allowed to change across
-regimes}
-
-\item{x}{matrix of independent variables with coefficients constant across regimes}
-
 \item{m}{maximum number of breaks}
 
 \item{eps}{convergence criterion for iterative recursive computation}
@@ -47,13 +41,20 @@ the model will use values given in \code{betaini}. If \code{0}, betaini is skipp
 \item{prewhit}{option to use AR(1) for prewhitening}
 
 \item{robust, hetdat, hetvar}{options on error terms assumptions}
+
+\item{y}{dependent variables in matrix form}
+
+\item{z}{matrix of independent variables with coefficients are allowed to change across
+regimes}
+
+\item{x}{matrix of independent variables with coefficients constant across regimes}
 }
 \value{
 A list that contains following:
 \itemize{
-\item{supfl}{SupF(l+1|l) test statistics}
-\item{cv}{Critical values for SupF(l+1|l) test}
-\item{ndat}{New date (if available)} }
+\item{supfl: SupF(l+1|l) test statistics}
+\item{cv: Critical values for SupF(l+1|l) test}
+\item{ndat: New date (if available)} }
 }
 \description{
 Function computes the procedure of SupF(l+1|l) test. The function returns

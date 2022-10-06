@@ -15,5 +15,13 @@ getdmax(signif, eps1)
 cv Critical value of SupF test
 }
 \description{
-
+Function to retrieve critical values of supF test stored in
+/SysData/Dmax/cv_{x}.csv where \code{x} corresponds to the trimming level:
+\itemize{
+\item{1: \code{eps1} = 5\%}
+\item{2: \code{eps1} = 10\%}
+\item{3: \code{eps1} = 15\%}
+\item{4: \code{eps1} = 20\%}
+\item{5: \code{eps1} = 25\%}}
+The critical values are tabulated from @references
 }

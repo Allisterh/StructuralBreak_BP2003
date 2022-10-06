@@ -4,16 +4,22 @@
 \alias{doorder}
 \title{Order estimation procedure}
 \usage{
-doorder(y, z, x, m, eps, eps1, maxi, fixb, betaini, printd)
+doorder(
+  y_name,
+  z_name = NULL,
+  x_name = NULL,
+  data,
+  m = 5,
+  eps = 1e-05,
+  eps1 = 0.15,
+  maxi = 10,
+  fixb = 0,
+  betaini = 0,
+  printd = 0,
+  bic_opt = 1
+)
 }
 \arguments{
-\item{y}{dependent variables in matrix form}
-
-\item{z}{matrix of independent variables with coefficients are allowed to change across
-regimes}
-
-\item{x}{matrix of independent variables with coefficients constant across regimes}
-
 \item{m}{maximum number of breaks}
 
 \item{eps}{convergence criterion for iterative recursive computation}
@@ -28,6 +34,15 @@ the model will use values given in \code{betaini}. If \code{0}, betaini is skipp
 \item{betaini}{Initial \eqn{beta_0} to use in estimation}
 
 \item{printd}{option to print results of iterations for partial change model}
+
+\item{y}{dependent variables in matrix form}
+
+\item{z}{matrix of independent variables with coefficients are allowed to change across
+regimes}
+
+\item{x}{matrix of independent variables with coefficients constant across regimes}
+
+\item{bic}{indicator which criterion is used in selecting number of breaks}
 }
 \value{
 A list that contains following:
@@ -36,7 +51,7 @@ A list that contains following:
 }
 \description{
 The function carry out the procedure to estimate order
- using BIC and the criterion of Liu, Wu and Zidek
+using BIC and the criterion of Liu, Wu and Zidek
 }
 \references{
 

@@ -36,7 +36,8 @@ across regimes}
 \item{bigT}{sample period T}
 }
 \value{
-
+bound Confidence intervals of break date in \code{90\%} and \code{95\%}
+significant level
 }
 \description{
 Function to compute confidence intervals for the break dates based on

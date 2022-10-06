@@ -5,29 +5,33 @@
 \title{SupF, UDMax & WDMax testing procedure}
 \usage{
 dotest(
-  y,
-  z,
-  x,
-  m,
-  eps,
-  eps1,
-  maxi,
-  fixb,
-  betaini,
-  printd,
-  prewhit,
-  robust,
-  hetdat,
-  hetvar
+  y_name,
+  z_name = NULL,
+  x_name = NULL,
+  data,
+  m = 5,
+  eps = 1e-05,
+  eps1 = 0.15,
+  maxi = 10,
+  fixb = 0,
+  betaini = 0,
+  printd = 0,
+  prewhit = 1,
+  robust = 1,
+  hetdat = 1,
+  hetvar = 1
 )
 }
 \arguments{
-\item{y}{dependent variables in matrix form}
+\item{y_name}{name of dependent variable in the data set}
 
-\item{z}{matrix of independent variables with coefficients are allowed to change across
-regimes}
+\item{z_name}{name of independent variables in the data set which coefficients are allowed to change
+across regimes. \code{default} is vector of 1 (Mean-shift model)}
 
-\item{x}{matrix of independent variables with coefficients constant across regimes}
+\item{x_name}{name of independent variables in the data set which coefficients are constant across
+regimes. \code{default} is NULL}
+
+\item{data}{the data set for estimation}
 
 \item{m}{maximum number of breaks}
 
@@ -51,10 +55,11 @@ the model will use values given in \code{betaini}. If \code{0}, betaini is skipp
 \value{
 A list that contains following:
 \itemize{
-\item{ftest}{SupF test statistics}
-\item{cv}{Critical values for Sup F test }
-\item{wftest}{Weighted Double Max test}
-\item{cvm}{Critical values for Dmax test}
+\item{ftest: SupF test of 0 vs m (1 to maximum) breaks statistics}
+\item{cv_supF: Critical values for Sup F test }
+\item{cv_Dmax: Critical values for Double Max test}
+\item{supF1: table summarizing the SupF test (for viewing purposes)}
+\item{UDMax: table summarizing the Double Max test (including UDMax statistics and CVs)}
 }
 }
 \description{

@@ -7,13 +7,6 @@
 doglob(y, z, x, m, eps, eps1, maxi, fixb, betaini, printd)
 }
 \arguments{
-\item{y}{dependent variables in matrix form}
-
-\item{z}{matrix of independent variables with coefficients are allowed to change across
-regimes}
-
-\item{x}{matrix of independent variables with coefficients constant across regimes}
-
 \item{eps}{convergence criterion for iterative recursive computation}
 
 \item{eps1}{trimming level}
@@ -26,6 +19,13 @@ the model will use values given in \code{betaini}. If \code{0}, betaini is skipp
 \item{betaini}{Initial \eqn{beta_0} to use in estimation}
 
 \item{printd}{option to print results of iterations for partial change model}
+
+\item{y_name}{dependent variables in matrix form}
+
+\item{z_name}{matrix of independent variables with coefficients are allowed to change across
+regimes}
+
+\item{x_name}{matrix of independent variables with coefficients constant across regimes}
 }
 \value{
 A list containing the following components:
