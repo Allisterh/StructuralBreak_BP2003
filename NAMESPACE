@@ -4,3 +4,5 @@ S3method(print, model)
 S3method(print, Wtest)
 S3method(print, supfltest)
 S3method(plot, model)
+
+importFrom("graphics", "abline", "legend", "lines", "segments")importFrom("stats", "pnorm")

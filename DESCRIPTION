@@ -1,15 +1,15 @@
 Package: BP2003
 Type: Package
 Title: Structural break estimation and testing procedure
-Version: 0.1.0
+Version: 1.0.1
 Author: Linh Nguyen, Yohei Yamatomo
 Maintainer: Linh Nguyen <nguye535@purdue.edu>
-Description: Follow 6 main procedures to estimate structural change in dynamic model
+Description: Follow 7 main procedures to estimate structural change in dynamic model
     Use four spaces when indenting paragraphs within the Description.
-License: What license is it under?
+License: GPL (>= 3)
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.1.1
 Depends: 
     R (>= 2.10)
-
+Roxygen: list(markdown = TRUE)
